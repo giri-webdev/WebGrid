@@ -1,0 +1,171 @@
+﻿@{
+    ViewBag.Title = "Index";
+
+}
+
+@model IEnumerable<WebGridDemo.Models.ProductModel>
+
+<h3>WebGrid Example</h3>
+
+@{
+    WebGrid grid = new WebGrid(Model);
+}
+
+@grid.Table(
+    htmlAttributes:new { id="grid_product" },
+    tableStyle: "table table-striped table-condensed table-bordered table-hover text-center",
+    headerStyle: "text-hdrtextcenter",
+columns: grid.Columns(
+
+grid.Column("Insert",format:@<text>
+<span style="cursor:pointer;" onclick="InsertProduct()" class="glyphicon glyphicon-plus"></span>
+</text>,canSort:false),
+grid.Column("Edit",format:@<text>
+<span style="cursor:pointer;" onclick="EditProduct(@(item.ProductID),this)" class="glyphicon glyphicon-pencil"></span>
+</text>,canSort:false),
+grid.Column("Delete",format:@<text>
+<span style="cursor:pointer;" onclick="DeleteProduct(@(item.ProductID),this)" class="glyphicon glyphicon-trash" ></span>
+</text>,canSort:false),
+grid.Column("ProductID",format:@<text>
+    <a style="cursor:pointer;" onclick="ProductDetail(this)">@item.ProductID</a>
+</text>),
+grid.Column("ProductName"),
+grid.Column("UnitPrice")
+
+)
+)
+
+<div id="div_gridpager" style="text-align:center;">
+    @grid.PagerList(mode: WebGridPagerModes.All)
+</div> 
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+            </div>
+            <div class="modal-body">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <label>Product Id</label>
+                            </td>
+                            <td>
+                                <input class="form-control" type="text" id="txt_productid" readonly />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label>Product Name</label>
+                            </td>
+                            <td>
+                                <input class="form-control" type="text" id="txt_productname" readonly />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label>Unit Price</label>
+                            </td>
+                            <td>
+                                <input class="form-control" type="text" id="txt_unitprice" readonly />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    function InsertProduct() {
+        bootbox.alert('Product inserted successfully.');
+
+        //just make the ajax call as i did for delete product, to 
+        //insert the new product
+    }
+
+    function ProductDetail(lnk) {
+
+        var row = $(lnk).closest('tr');
+        var id = $(row).find('td:eq(3) > a').text();
+        $('#txt_productid').val(id);
+
+        var name = $(row).find('td:eq(4)').text();
+        $('#txt_productname').val(name);
+
+        var unitprice = $(row).find('td:eq(5)').text();
+        $('#txt_unitprice').val(unitprice);
+
+        $('.modal-title').html(name+' Detail');
+        $('#myModal').modal();
+
+    }
+
+    function DeleteProduct(productId,span)
+    {
+       
+        var row = $(span).closest('tr');
+     
+        var name = $(row).find('td:eq(4)').text();
+
+        bootbox.confirm("Do you want to delete "+ name +" ?", function (result) {
+            if (result) {
+
+                var request = $.ajax({
+                    url: "WebGrid/DeleteProduct",
+                    type: "POST",
+                    async:false,
+                    data: { ProductID: parseInt(productId) },
+                    dataType: "json"
+                });
+
+                request.done(function (data) {
+
+                    if (data.result) {
+                        $(row).remove();
+                        bootbox.alert('Product deleted successfully.');
+                    }
+                    else {
+
+                        bootbox.alert('Deletion failed.');
+                    }
+                });
+
+                request.fail(function (jqXHR, textStatus) {
+                    bootbox.alert('Deletion failed.');
+                });
+            }
+        });
+
+       
+    }
+
+    function EditProduct(productId, span) {
+
+        //write the code to edit the product from the db
+        bootbox.alert('Product updated successfully.');
+    }
+
+    $(function () {
+
+        $('#div_gridpager > ul').addClass('pagination');
+     
+    });
+</script>
+
+<style type="text/css">
+    .text-hdrtextcenter th {
+        text-transform:capitalize;
+        text-align:center;
+    }
+
+</style>
